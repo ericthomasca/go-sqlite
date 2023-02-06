@@ -1,12 +1,17 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/ericthomasca/go-sqlite/server/models"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	err := models.ConnectDatabase()
+	checkErr(err)
+
 	r := gin.Default()
 
 	// API v1
@@ -24,7 +29,15 @@ func main() {
 }
 
 func getBooks(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "getBooks called"})
+	books, err := models.GetBooks(5)
+	checkErr(err)
+
+	if books == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No Records Found"})
+		return
+	} else {
+		c.JSON(http.StatusOK, gin.H{"data": books})
+	}
 }
 
 func getBooksById(c *gin.Context) {
@@ -48,4 +61,10 @@ func deleteBook(c *gin.Context) {
 
 func options(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "options called"})
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
